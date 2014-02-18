@@ -104,6 +104,9 @@ namespace KinectMouse
                                 else
 									player2 = skeletons.ElementAt(curSkeleton);
                             }
+							//2nd player was found, maximum
+							if(player2)
+								break;
                         }
                     }
                     else
