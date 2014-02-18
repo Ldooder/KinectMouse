@@ -18,6 +18,7 @@ namespace KinectMouse
         //Cursor is the point at which the dominant hand is located. 
         //The mouse's position gets set to this point.
         public static System.Drawing.Point cursor;
+		public static System.Drawing.Point cursor2;
 
         /* Here we save the "player" skeleton, the current one being dominantly tracked by the Kinect.
          * Player is selected by being the first skeleton arbritrarily tracked by the kinect. It then
@@ -27,9 +28,11 @@ namespace KinectMouse
          * */
         public static Skeleton player = null;
         //Assume the player is right handed. More on this later.
-        public static JointType dominantHand = JointType.HandRight;
+        public static JointType dominantHand = JointType.HandRight, dominantHand2 = JointType.HandRight;
+		
         //This is the index of the current player.
         public static int curSkeleton = 0;
+		public static Skeleton player2 = null;
 
         static void Main(string[] args)
         {
@@ -96,15 +99,17 @@ namespace KinectMouse
                         {
                             if (skeletons.ElementAt(i).TrackingState == SkeletonTrackingState.Tracked)
                             {
-                                curSkeleton = i;
-                                player = skeletons.ElementAt(curSkeleton);
-                                break;
+								if(!player)
+									player = skeletons.ElementAt(curSkeleton);
+                                else
+									player2 = skeletons.ElementAt(curSkeleton);
                             }
                         }
                     }
                     else
                     {
                         player = skeletons.ElementAt(curSkeleton);
+						player2 = null;
                     }
                     
                     //If there is at least one person being tracked:
@@ -134,7 +139,35 @@ namespace KinectMouse
                     {
                         //Console.WriteLine("Nobody Tracked.");
                     }
-                    
+					
+					//check if there is a player 2 being tracked
+                    if (player2 != null)
+                    {
+                        
+
+                        //If the player's dominant hand is below the screen
+                        if ( ( .5 - player2.Joints[dominantHand2].Position.Y ) * screenHeight * sensitivity > screenHeight)
+                        {
+                            //Switch to the player2's other hand.
+                            JointType offHand = dominantHand2 == JointType.HandRight ? JointType.HandLeft : JointType.HandRight;
+                            //If the offHand is NOT below the screen, switch hands.
+                            if ((.5 - player2.Joints[offHand].Position.Y) * screenHeight * sensitivity <= screenHeight)
+                            {
+                                dominantHand2 = offHand;
+                            }
+                        }
+						//cant have the mouse spazzing out
+                        cursor2.X = (int)((player2.Joints[dominantHand2].Position.X + .5) * screenWidth * sensitivity);
+                        cursor2.Y = (int)((.5 - player2.Joints[dominantHand2].Position.Y) * screenHeight * sensitivity);
+						//cant have mouse spazzing but lets keep track of positions
+                        //System.Windows.Forms.cursor2.Position = cursor2;
+
+                        Console.WriteLine("Player2: " + cursor2.X + ", " + cursor2.Y );
+                    }
+                    else
+                    {
+                        //Console.WriteLine("Nobody Tracked.");
+                    }
                 }
             }
         }
